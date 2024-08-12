@@ -1,25 +1,38 @@
-import { TExpense } from "../App";
-
-
+import { useEffect } from 'react';
+import axios from 'axios';
+import { TExpense } from '../App';
+import { BASE_URL } from '../constant';
 
 interface ExpenseProps {
   expenses: TExpense[];
-  setExpenseArray: React.Dispatch<React.SetStateAction<TExpense[]>>
-  category: string
+  setExpenseArray: React.Dispatch<React.SetStateAction<TExpense[]>>;
+  category: string;
 }
 
+const ExpenseList = ({ expenses, setExpenseArray, category }: ExpenseProps) => {
 
-const ExpenseList = ({ expenses,setExpenseArray,category}: ExpenseProps) => {
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/Expense`);
+        setExpenseArray(response.data);
+      } catch (error) {
+        console.error('Error fetching expenses:', error);
+      }
+    };
 
+    fetchExpenses();
+  }, [setExpenseArray]);
 
+  const onDelete = async (expenseId: number) => {
+    try {
+      await axios.delete(`${BASE_URL}/api/Expense/${expenseId}`);
+      setExpenseArray(expenses.filter(expense => expense.Id !== expenseId));
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+    }
+  };
 
-  const onDelete = (expenseItemIndex:number) => {
-    const tempArray:TExpense[] = [...expenses];
-    tempArray.splice(expenseItemIndex,1)
-    setExpenseArray(tempArray);
-  }
-
-  
   return (
     <>
       <table className="table table-dark table-bordered">
@@ -33,36 +46,38 @@ const ExpenseList = ({ expenses,setExpenseArray,category}: ExpenseProps) => {
         </thead>
         <tbody>
           {
-          category === "All" ? expenses.map((expense,idx) => (
-            <tr key={idx}>
-              <td>{expense.description}</td>
-              <td>{expense.amount}</td>
-              <td>{expense.category}</td>
-              <td>
-                <button
-                  className="btn btn-outline-danger"
-                  onClick={() => onDelete(idx)}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          )) :
-          expenses.filter(expense => expense.category == category).map((expense,idx) => (
-            <tr key={idx}>
-              <td>{expense.description}</td>
-              <td>{expense.amount}</td>
-              <td>{expense.category}</td>
-              <td>
-                <button
-                  className="btn btn-outline-danger"
-                  onClick={() => onDelete(idx)}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
+            category === "All"
+              ? expenses.map((expense, idx) => (
+                <tr key={idx}>
+                  <td>{expense.description}</td>
+                  <td>{expense.amount}</td>
+                  <td>{expense.category}</td>
+                  <td>
+                    <button
+                      className="btn btn-outline-danger"
+                      onClick={() => onDelete(expense.Id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+              : expenses.filter(expense => expense.category === category).map((expense, idx) => (
+                <tr key={idx}>
+                  <td>{expense.description}</td>
+                  <td>{expense.amount}</td>
+                  <td>{expense.category}</td>
+                  <td>
+                    <button
+                      className="btn btn-outline-danger"
+                      onClick={() => onDelete(expense.Id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+          }
         </tbody>
         <tfoot>
           <tr>

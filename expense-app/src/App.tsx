@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ExpenseForm from "./components/ExpenseForm";
 import ExpenseFilter from "./components/ExpenseFilter";
 import ExpenseList from "./components/ExpenseList";
 import categories from "./Categories";
+import { BASE_URL } from "./constant";
+import axios from "axios";
 
 export type TExpense = {
+  Id: number;
   description: string;
   amount: number;
   category: string;
@@ -13,15 +16,19 @@ export type TExpense = {
 const App = () => {
   const [expenseArray, setExpenseArray] = useState<TExpense[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/expense`);// Update this URL if different
+        setExpenseArray(response.data);
+      } catch (error) {
+        console.error('Error fetching expenses:', error);
+      }
+    };
 
-  const [dummyExpensesArray, setDummyExpensesArray] = useState([
-    { id: 1, description: "aaa", amount: 10, category: "Utilities" },
-    { id: 2, description: "bbb", amount: 15, category: "Entertainment" },
-    { id: 3, description: "ccc", amount: 20, category: "Food" },
-    { id: 4, description: "ddd", amount: 25, category: "Shopping" },
-    { id: 5, description: "eee", amount: 16, category: "Groceries" },
-  ]);
-
+    fetchExpenses();
+  }, []);
 
   return (
     <>

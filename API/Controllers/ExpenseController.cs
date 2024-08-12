@@ -48,7 +48,7 @@ namespace API.Controllers
             _context.Remove(student);
             var result = await _context.SaveChangesAsync();
             if (result > 0) {
-                return Ok("Student was deleted successfully");
+                return Ok("Expense was deleted successfully");
             }
             return BadRequest();
         }
@@ -76,7 +76,7 @@ namespace API.Controllers
             
             var result = await _context.SaveChangesAsync();
             if (result > 0) {
-                return Ok("Student was updated successfully");
+                return Ok("Exponse was updated successfully");
             }
             return BadRequest();
         }              

@@ -1,40 +1,74 @@
-import { useEffect } from 'react';
-import axios from 'axios';
-import { TExpense } from '../App';
+import { useEffect, useState } from 'react';
+import axios, { CanceledError } from 'axios';
 import { BASE_URL } from '../constant';
+import { Expense } from '../App';
 
 interface ExpenseProps {
-  expenses: TExpense[];
-  setExpenseArray: React.Dispatch<React.SetStateAction<TExpense[]>>;
+  expenses: Expense[];
+  setExpenseArray: React.Dispatch<React.SetStateAction<Expense[]>>;
   category: string;
 }
 
 const ExpenseList = ({ expenses, setExpenseArray, category }: ExpenseProps) => {
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [expense, setExpense] = useState({
+    id: 0,
+    description: '',
+    amount: '',
+    category: ''
+  })
+
+  const fetchData = () => {
+    setIsLoading(true);
+    axios
+      .get(`${BASE_URL}/api/Expense`)
+      .then((response) => {
+        setExpenseArray(response.data); // Update the main state directly
+      })
+      .catch((error) => {
+        if (error instanceof CanceledError) {
+          return;
+        }
+        setError(error.message);
+        console.log("error debug: " + error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
 
   useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/api/Expense`);
-        setExpenseArray(response.data);
-      } catch (error) {
-        console.error('Error fetching expenses:', error);
-      }
-    };
+    fetchData();
+  }, []);
 
-    fetchExpenses();
-  }, [setExpenseArray]);
-
-  const onDelete = async (expenseId: number) => {
-    try {
-      await axios.delete(`${BASE_URL}/api/Expense/${expenseId}`);
-      setExpenseArray(expenses.filter(expense => expense.Id !== expenseId));
-    } catch (error) {
-      console.error('Error deleting expense:', error);
-    }
+  const onDelete = (id: number) => {
+    console.log("current id: " + id);
+    axios
+      .delete(`${BASE_URL}/api/Expense/${id}`)
+      .then(() => {
+        setExpenseArray(expenses.filter((expense) => expense.id !== id)); // Update the main state directly
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
+
+  const onEdit = (id: number) => {
+    axios.put(`${BASE_URL}/api/Expense/${id}`, expenses)
+    .then(() => {
+      fetchData();
+
+    })
+    .catch(error => {
+      console.log(error);
+    })
+  }
 
   return (
     <>
+      {isLoading && <p>Loading...</p>}
+      {error && <p className="text-danger">Error: {error}</p>}
       <table className="table table-dark table-bordered">
         <thead>
           <tr>
@@ -45,39 +79,51 @@ const ExpenseList = ({ expenses, setExpenseArray, category }: ExpenseProps) => {
           </tr>
         </thead>
         <tbody>
-          {
-            category === "All"
-              ? expenses.map((expense, idx) => (
-                <tr key={idx}>
+          {category === "All"
+            ? expenses.map((expense) => (
+                <tr key={expense.id}>
                   <td>{expense.description}</td>
                   <td>{expense.amount}</td>
                   <td>{expense.category}</td>
                   <td>
                     <button
                       className="btn btn-outline-danger"
-                      onClick={() => onDelete(expense.Id)}
+                      onClick={() => onDelete(expense.id)}
                     >
                       Delete
                     </button>
-                  </td>
-                </tr>
-              ))
-              : expenses.filter(expense => expense.category === category).map((expense, idx) => (
-                <tr key={idx}>
-                  <td>{expense.description}</td>
-                  <td>{expense.amount}</td>
-                  <td>{expense.category}</td>
-                  <td>
                     <button
-                      className="btn btn-outline-danger"
-                      onClick={() => onDelete(expense.Id)}
-                    >
-                      Delete
-                    </button>
+                        className="btn btn-outline-danger"
+                        onClick={() => onEdit(expense.id)}
+                      >
+                        Edit
+                      </button>
                   </td>
                 </tr>
               ))
-          }
+            : expenses
+                .filter((expense) => expense.category === category)
+                .map((expense) => (
+                  <tr key={expense.id}>
+                    <td>{expense.description}</td>
+                    <td>{expense.amount}</td>
+                    <td>{expense.category}</td>
+                    <td>
+                      <button
+                        className="btn btn-outline-danger"
+                        onClick={() => onDelete(expense.id)}
+                      >
+                        Delete
+                      </button>
+                      <button
+                        className="btn btn-outline-danger"
+                        onClick={() => onEdit(expense.id)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
         </tbody>
         <tfoot>
           <tr>

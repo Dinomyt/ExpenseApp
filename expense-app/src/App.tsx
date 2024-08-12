@@ -4,31 +4,43 @@ import ExpenseFilter from "./components/ExpenseFilter";
 import ExpenseList from "./components/ExpenseList";
 import categories from "./Categories";
 import { BASE_URL } from "./constant";
-import axios from "axios";
+import axios, { CanceledError } from "axios";
 
-export type TExpense = {
-  Id: number;
+export interface Expense {
+  id: number;
   description: string;
   amount: number;
   category: string;
 };
 
 const App = () => {
-  const [expenseArray, setExpenseArray] = useState<TExpense[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/api/expense`);// Update this URL if different
-        setExpenseArray(response.data);
-      } catch (error) {
-        console.error('Error fetching expenses:', error);
-      }
-    };
+  const [data, setData] = useState<Expense[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    fetchExpenses();
+  useEffect(() => {
+    fetchData();
   }, []);
+
+  const fetchData = () =>{
+    axios
+    .get(`${BASE_URL}/api/Expense`)
+    .then(response => {
+        setData(response.data);
+    })
+    .catch(error => {
+        if(error instanceof CanceledError){
+            return
+        }
+        setError(error.message);
+        console.log("error debug: "+ error);
+
+    }).finally(()=>{
+        setIsLoading(false);
+    })
+    console.log("Data debug: "+ data);
+}
 
   return (
     <>
@@ -36,8 +48,7 @@ const App = () => {
       <div className="container">
         <div className="mb-5">
           <ExpenseForm
-            expenseArray={expenseArray}
-            setExpenseArray={setExpenseArray}
+            fetchData={fetchData}
           />
         </div>
 
@@ -49,8 +60,8 @@ const App = () => {
         <div className="m-5">
           <ExpenseList
             category={selectedCategory}
-            setExpenseArray={setExpenseArray}
-            expenses={expenseArray}
+            setExpenseArray={setData}
+            expenses={data}
           />
         </div>
       </div>

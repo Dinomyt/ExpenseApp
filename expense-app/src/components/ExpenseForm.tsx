@@ -1,60 +1,86 @@
-import axios from 'axios';
-import { useState } from 'react';
-import { TExpense } from '../App';
+import axios from "axios";
+import { useState } from "react";
 import categories from "../Categories";
-import { BASE_URL } from '../constant';
+import { BASE_URL } from "../constant";
+import { Expense } from "../App";
 
-type ExpenseFormProp = {
-  expenseArray: TExpense[],
-  setExpenseArray: React.Dispatch<React.SetStateAction<TExpense[]>>
+interface ExpenseFormProps{
+  fetchData: () => void;
+  currentData? : Expense
+
 }
 
-const ExpenseForm = ({
-  expenseArray,
-  setExpenseArray
-}: ExpenseFormProp) => {
+const ExpenseForm = ({ fetchData,currentData }: ExpenseFormProps) => {
+  const [expense, setExpense] = useState({
+    id: currentData?.id || 0,
+    description: currentData?.description || '',
+    amount: currentData?.amount || '',
+    category: currentData?.category || ''
+  })
 
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState(0);
-  const [category, setCategory] = useState("");
+  const addExpense = () => {
+    axios.post(`${BASE_URL}/api/Expense/`, expense)
+    .then(response => {
+     console.log(response);
+     fetchData();
+    })
+    .catch(error => {
+     console.log(error);
+    })
+  }
 
-  const AddExpenses = async () => {
-    const expense: TExpense = {
-      description: description,
-      amount: amount,
-      category: category,
-      Id: 0
-    };
-
-    try {
-      await axios.post(`${BASE_URL}/api/Expense`, expense);
-      setExpenseArray([...expenseArray, expense]);
-      setDescription('');
-      setAmount(0);
-      setCategory('');
-    } catch (error) {
-      console.error('Error adding expense:', error);
-    }
-  };
 
   return (
     <form>
       <div className="mb-3">
-        <label htmlFor="description" className="form-label">Description</label>
-        <input onChange={(e) => setDescription(e.target.value)} id="description" type="text" className="form-control" value={description} />
+        <label htmlFor="description" className="form-label">
+          Description
+        </label>
+        <input
+          onChange={(e) => setExpense({...expense, description:e.target.value})}
+          id="description"
+          type="text"
+          className="form-control"
+          value={expense.description}
+        />
       </div>
       <div className="mb-3">
-        <label htmlFor="amount" className="form-label">Amount</label>
-        <input onChange={(e) => setAmount(Number(e.target.value))} id="amount" type="number" className="form-control" value={amount} />
+        <label htmlFor="amount" className="form-label">
+          Amount
+        </label>
+        <input
+          onChange={(e) => setExpense({...expense, amount:e.target.value})}    
+          id="amount"
+          type="number"
+          className="form-control"
+          value={expense.amount}
+        />
       </div>
       <div className="mb-3">
-        <label htmlFor="category" className="form-label">Category</label>
-        <select onChange={(e) => setCategory(e.target.value)} id="category" className="form-select" value={category}>
+        <label htmlFor="category" className="form-label">
+          Category
+        </label>
+        <select
+          onChange={(e) => setExpense({...expense, category:e.target.value})}
+          id="category"
+          className="form-select"
+          value={expense.category}
+        >
           <option value=""></option>
-          {categories.map(category => <option key={category} value={category}>{category}</option>)}
+          {categories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
         </select>
       </div>
-      <button onClick={AddExpenses} type="button" className="btn btn-outline-primary">Submit</button>
+      <button
+        onClick={addExpense}
+        type="button"
+        className="btn btn-outline-primary"
+      >
+        Submit
+      </button>
     </form>
   );
 };

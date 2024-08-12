@@ -62,6 +62,7 @@ const App = () => {
             category={selectedCategory}
             setExpenseArray={setData}
             expenses={data}
+            fetchData={fetchData}
           />
         </div>
       </div>

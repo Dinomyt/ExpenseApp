@@ -16,7 +16,6 @@ const ExpenseList = ({ expenses, setExpenseArray, category,fetchData }: ExpenseP
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editedExpense, setEditedExpense] = useState<Expense | null>(null);
 
-
   const onDelete = (id: number) => {
     axios
       .delete(`${BASE_URL}/api/Expense/${id}`)
@@ -61,6 +60,17 @@ const ExpenseList = ({ expenses, setExpenseArray, category,fetchData }: ExpenseP
       });
     }
   };
+
+  const filteredExpenses = category === "All"
+    ? expenses
+    : expenses.filter((expense) => expense.category === category);
+
+  const total = filteredExpenses
+    .reduce((acc, expense) => {
+      const amount = typeof expense.amount === 'number' ? expense.amount : parseFloat(expense.amount) || 0;
+      return acc + amount;
+    }, 0)
+    .toFixed(2);
 
   return (
     <>
@@ -224,13 +234,7 @@ const ExpenseList = ({ expenses, setExpenseArray, category,fetchData }: ExpenseP
   <tr>
     <td>Total</td>
     <td>
-      {expenses
-        .reduce((acc, expense) => {
-          // Ensure expense.amount is a number
-          const amount = typeof expense.amount === 'number' ? expense.amount : parseFloat(expense.amount) || 0;
-          return acc + amount;
-        }, 0)
-        .toFixed(2)}
+      {total}
     </td>
     <td></td>
     <td></td>
